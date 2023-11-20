@@ -11,6 +11,7 @@ import HomeScreen from './Homescreen'; // Import the HomeScreen component
 const Stack = createStackNavigator();
 
 export default function App() {
+  const [title,setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

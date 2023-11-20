@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, View, TextInput, TouchableOpacity, ScrollView, StyleSheet, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you have MaterialIcons in your vector-icons library
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import { db, collection, getDocs } from './firebase/index';
 
-const HomeScreen = ({ navigation }) => {
+
+const HomeScreen = () => {
   const [nameList, setNameList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const navigation = useNavigation();
 
   const addNameToList = (name) => {
     setNameList([...nameList, name]);
   };
 
+  const fetchCategories = async () => {
+    try {
+      const categoriesCollection = collection(db, 'categories');
+      const querySnapshot = await getDocs(categoriesCollection);
+
+      const categories = [];
+      querySnapshot.forEach((doc) => {
+        categories.push(doc.data().name);
+      });
+
+      setNameList(categories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   const filteredNameList = nameList.filter((name) =>
     name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   return (
     <View style={styles.container}>
       <Text style={styles.textAbove}>Categories</Text>
@@ -57,9 +80,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.violetContainer}>
-        {/* Container with violet background */}
         <View style={styles.pressablesContainer}>
-          {/* First Pressable with HomeIcon */}
           <TouchableOpacity
             style={styles.pressable}
             onPress={() => {
@@ -68,13 +89,9 @@ const HomeScreen = ({ navigation }) => {
           >
             <Icon name="home" size={24} color="black" />
           </TouchableOpacity>
-
-          {/* Second Pressable with WidgetsIcon */}
           <Pressable style={styles.pressable}>
             <Text style={styles.pressableText}>⬛</Text>
           </Pressable>
-
-          {/* Third Pressable with HelpCenterIcon */}
           <Pressable style={styles.pressable}>
             <Text style={styles.pressableText}>❔</Text>
           </Pressable>

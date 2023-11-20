@@ -1,21 +1,36 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, Modal, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { db, addDoc, collection } from './firebase/index';
 
-const NameInputScreen = ({ navigation, route }) => {
+const NameInputScreen = ({ route }) => {
   const [name, setName] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation();
 
   const handleNameChange = (text) => {
     setName(text);
   };
 
-  const handleSaveName = () => {
-    if (name.trim() === '') {
-      setModalVisible(true);
-    } else {
-      const { addNameToList } = route.params;
-      addNameToList(name);
-      navigation.goBack();
+  const handleSaveName = async () => {
+    try {
+      if (name.trim() === '') {
+        setModalVisible(true);
+      } else {
+        const { addNameToList } = route.params;
+        addNameToList(name);
+
+        // Add the category name to Firebase
+        const categoriesCollection = collection(db, 'categories');
+        await addDoc(categoriesCollection, {
+          name: name,
+        });
+
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error saving name:', error);
+      // Handle error (e.g., show an error message to the user)
     }
   };
 
@@ -32,7 +47,7 @@ const NameInputScreen = ({ navigation, route }) => {
         onChangeText={handleNameChange}
         value={name}
       />
-      <View style={styles.DoneContainer}>
+      <View style={styles.doneContainer}>
         <Button title="DONE" onPress={handleSaveName} color="#0bce83" />
       </View>
       {/* Modal for empty input */}
@@ -77,7 +92,7 @@ const styles = StyleSheet.create({
     fontWeight: 'thin',
     fontFamily: 'helvetica',
   },
-  DoneContainer: {
+  doneContainer: {
     marginTop: 20,
     width: '80%',
   },
