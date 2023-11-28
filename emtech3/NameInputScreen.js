@@ -50,7 +50,6 @@ const NameInputScreen = ({ route }) => {
       <View style={styles.doneContainer}>
         <Button title="DONE" onPress={handleSaveName} color="#0bce83" />
       </View>
-      {/* Modal for empty input */}
       <Modal
         animationType="slide"
         transparent={true}

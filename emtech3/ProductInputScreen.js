@@ -1,10 +1,8 @@
-// ProductInputScreen.js
-
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Text, View, Button, StyleSheet } from 'react-native';
 import AddProductForm from './AddProductForm';
 import ProductProfile from './ProductProfile';
-import { collection, addDoc, setDoc, db, doc } from './firebase/index';
+import { collection, addDoc, setDoc, db, doc, getDocs, query, where } from './firebase/index';
 
 const ProductInputScreen = ({ route, navigation }) => {
   const { category } = route.params;
@@ -51,8 +49,21 @@ const ProductInputScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    // Load initial data or set up real-time updates if needed
-  }, []);
+    // Fetch documents from the 'products' collection based on the category
+    const fetchProducts = async () => {
+      const q = query(collection(db, 'products'), where('category', '==', category));
+      const querySnapshot = await getDocs(q);
+
+      const products = [];
+      querySnapshot.forEach((doc) => {
+        products.push({ ...doc.data(), id: doc.id });
+      });
+
+      setProductList(products);
+    };
+
+    fetchProducts();
+  }, [category]); // Trigger the effect whenever the category changes
 
   return (
     <ScrollView style={styles.container}>

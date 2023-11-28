@@ -1,4 +1,3 @@
-// AddProductForm.js
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 

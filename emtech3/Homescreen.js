@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TextInput, TouchableOpacity, ScrollView, StyleSheet, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Text, View, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { Icon } from 'react-native-elements'; 
 import { useNavigation } from '@react-navigation/native';
 import { db, collection, getDocs } from './firebase/index';
-
 
 const HomeScreen = () => {
   const [nameList, setNameList] = useState([]);
@@ -37,67 +36,83 @@ const HomeScreen = () => {
   const filteredNameList = nameList.filter((name) =>
     name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.textAbove}>Categories</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.textInput}
-          placeholder="🔍 SEARCH"
-          onChangeText={(text) => setSearchQuery(text)}
-          value={searchQuery}
-        />
-      </View>
-      <ScrollView
-        style={styles.categoryContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.nameList}>
-          {filteredNameList.map((name, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.nameBox,
-                index % 2 === 0 ? styles.leftNameBox : styles.rightNameBox,
-              ]}
-              onPress={() => {
-                navigation.navigate('ProductInput', { category: name });
-              }}
-            >
-              <Text>{name}</Text>
-            </TouchableOpacity>
-          ))}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -100}
+    >
+      <View style={styles.container}>
+        <Text style={styles.textAbove}>Categories</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="🔍 SEARCH"
+            onChangeText={(text) => setSearchQuery(text)}
+            value={searchQuery}
+          />
         </View>
-      </ScrollView>
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.roundButton}
-          onPress={() => {
-            navigation.navigate('Category', { addNameToList });
-          }}
+        <ScrollView
+          style={styles.categoryContainer}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.buttonText}>ADD</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.violetContainer}>
-        <View style={styles.pressablesContainer}>
+          <View style={styles.nameList}>
+            {filteredNameList.map((name, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.nameBox,
+                  index % 2 === 0 ? styles.leftNameBox : styles.rightNameBox,
+                ]}
+                onPress={() => {
+                  navigation.navigate('ProductInput', { category: name });
+                }}
+              >
+                <Text>{name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={styles.pressable}
+            style={styles.roundButton}
             onPress={() => {
-              navigation.navigate('Home');
+              navigation.navigate('Category', { addNameToList });
             }}
           >
-            <Icon name="home" size={24} color="black" />
+            <Text style={styles.buttonText}>ADD</Text>
           </TouchableOpacity>
-          <Pressable style={styles.pressable}>
-            <Text style={styles.pressableText}>⬛</Text>
-          </Pressable>
-          <Pressable style={styles.pressable}>
-            <Text style={styles.pressableText}>❔</Text>
-          </Pressable>
+        </View>
+        <View style={styles.violetContainer}>
+          <View style={styles.pressablesContainer}>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+                navigation.replace('Landing');
+              }}
+            >
+              <Icon name="home" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+                navigation.navigate('ExpiTrack');
+              }}
+            >
+              <Icon name="calendar" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+              }}
+            >
+              <Icon name="question" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -182,7 +197,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   violetContainer: {
-    backgroundColor: 'violet',
+    backgroundColor: '#f6f5f5',
     padding: 5,
     marginTop: 'auto',
     borderRadius: 10,

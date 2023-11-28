@@ -1,100 +1,164 @@
-// LandingPage.js
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, View, TextInput, TouchableOpacity, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
+import { collection, getDocs } from 'firebase/firestore';
+import ProductProfile from './ProductProfile';
+import { db } from './firebase/index';
 
 const LandingPage = () => {
+  const [expiringProducts, setExpiringProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
-  const [nameList, setNameList] = useState('');
+
+  useEffect(() => {
+    const fetchExpiringProducts = async () => {
+      try {
+        const productsCollection = collection(db, 'products');
+        const querySnapshot = await getDocs(productsCollection);
+
+        const expiringProductsData = [];
+        querySnapshot.forEach((doc) => {
+          expiringProductsData.push({ id: doc.id, ...doc.data() });
+        });
+
+        expiringProductsData.sort((a, b) => {
+          const dateA = new Date(a.expirationDate);
+          const dateB = new Date(b.expirationDate);
+          return dateA - dateB;
+        });
+
+        setExpiringProducts(expiringProductsData);
+      } catch (error) {
+        console.error('Error fetching expiring products:', error);
+        setErrorMessage('Error fetching expiring products');
+      }
+    };
+
+    fetchExpiringProducts();
+  }, []);
+
+  const filteredExpiringProducts = expiringProducts.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+
+  const navigateToEditScreen = (productId) => {
+    navigation.navigate('EditProductScreen', { productData: productId, onSave: handleSave });
+  };
+
+  const handleSave = (editedProduct) => {
+    console.log('Save edited product:', editedProduct);
+  };
+
+  // Define onEdit function to be passed to ProductProfile
+  const handleEdit = (productId) => {
+    // Implement your logic to navigate to the EditProduct screen with the product ID
+    console.log('Edit product with ID:', productId);
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.textAbove}>PRODUCTS SOON TO EXPIRE</Text>
-      <ScrollView>
-        {/* Remove the search bar and add button */}
-        <View style={styles.nameList}>
-          <TouchableOpacity
-            style={styles.nameBox}
-            onPress={() => {
-              // Handle navigation to ProductInput or any other action
-            }}
-          >
-            <Text>Product 1</Text>
-          </TouchableOpacity>
-          {/* Add more ProductProfile components as needed */}
-        </View>
-      </ScrollView>
-      {/* Your bottom container content here */}
-      <View style={styles.violetContainer}>
-        {/* Container with violet background */}
-        <View style={styles.pressablesContainer}>
-          {/* First Pressable with HomeIcon */}
-          <TouchableOpacity
-            style={styles.pressable}
-            onPress={() => {
-              navigation.navigate('Home');
-            }}
-          >
-            <Text>Home Icon</Text>
-          </TouchableOpacity>
-
-          {/* Second Pressable with WidgetsIcon */}
-          <TouchableOpacity
-            style={styles.pressable}
-            onPress={() => {
-              // Handle second pressable action
-            }}
-          >
-            <Text>Widgets Icon</Text>
-          </TouchableOpacity>
-
-          {/* Third Pressable with HelpCenterIcon */}
-          <TouchableOpacity
-            style={styles.pressable}
-            onPress={() => {
-              // Handle third pressable action
-            }}
-          >
-            <Text>Help Icon</Text>
-          </TouchableOpacity>
+      <Text style={styles.title}>Expiring Products</Text>
+      {errorMessage ? (
+        <Text style={styles.errorMessage}>{errorMessage}</Text>
+      ) : (
+        <>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="🔍 SEARCH"
+              onChangeText={(text) => setSearchQuery(text)}
+              value={searchQuery}
+            />
+          </View>
+          <ScrollView style={styles.productContainer} showsVerticalScrollIndicator={false}>
+            {filteredExpiringProducts.map((product) => (
+              <TouchableOpacity
+                key={product.id}
+                style={styles.productItem}
+                onPress={() => navigateToEditScreen(product.id)}
+              >
+                {/* Pass onEdit as a prop to ProductProfile */}
+                <ProductProfile productData={product} onEdit={handleEdit} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </>
+      )}
+         <View style={styles.violetContainer}>
+          <View style={styles.pressablesContainer}>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+                navigation.navigate('Landing');
+              }}
+            >
+              <Icon name="home" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+                navigation.navigate('ExpiTrack');
+              }}
+            >
+              <Icon name="calendar" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pressable}
+              onPress={() => {
+                // Handle onPress for the third icon
+              }}
+            >
+              <Icon name="question" type="font-awesome" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 150,
+    paddingTop: 40,
     paddingHorizontal: 16,
     backgroundColor: '#f6f5f5',
   },
-  textAbove: {
-    textAlign: 'center',
+  title: {
     color: '#2d0c57',
     fontSize: 45,
     fontWeight: 'thin',
-    position: 'absolute',
-    top: 40,
   },
-  nameList: {
+  inputContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderColor: '#d4bfb0',
+    alignContent: 'center',
+    alignItems: 'center',
   },
-  nameBox: {
+  textInput: {
+    color: '#9586A8',
     borderWidth: 1,
-    borderColor: '#000',
-    padding: 40,
-    width: '48%',
-    marginVertical: 10,
-    borderRadius: 20,
-    marginRight: 5,
+    borderColor: '#D9D0E3',
+    marginRight: 15,
+    padding: 5,
+    width: 350,
+    borderRadius: 27,
+    backgroundColor: 'white',
+  },
+  productContainer: {
+    maxHeight: 420,
+  },
+  productItem: {
+    marginBottom: 16,
   },
   violetContainer: {
-    backgroundColor: 'violet',
+    backgroundColor: '#f6f5f5',
     padding: 5,
     marginTop: 'auto',
     borderRadius: 10,
@@ -108,6 +172,15 @@ const styles = StyleSheet.create({
   },
   pressable: {
     alignItems: 'center',
+  },
+  pressableText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  errorMessage: {
+    color: 'red',
+    fontSize: 16,
+    marginTop: 10,
   },
 });
 
